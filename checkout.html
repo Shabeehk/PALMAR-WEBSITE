@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Palmar</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%23173247%22/><rect x=%2214%22 y=%226%22 width=%2212%22 height=%2212%22 rx=%224%22 fill=%22%232f6b52%22/></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="container nav-wrap">
+    <a href="index.html" class="logo">
+      <svg class="logo-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="16" height="32" rx="6" fill="#173247"/>
+        <rect x="18" y="4" width="18" height="18" rx="6" fill="#2f6b52"/>
+      </svg>
+      PALMAR
+    </a>
+    <div class="header-actions">
+      <select class="lang-select" id="langSelect" aria-label="Language">
+        <option value="en">English</option>
+        <option value="ml">മലയാളം</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <button class="cart-btn" id="cartBtn" aria-label="Cart">
+        🛒 <span class="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section style="padding-top:44px;">
+  <div class="container">
+    <h1 data-i18n="checkout.title">Checkout</h1>
+
+    <div id="emptyCartNotice" style="display:none;">
+      <p data-i18n="checkout.empty_cart">Your cart is empty. Add Palmar to your cart first.</p>
+      <a href="index.html#product" class="btn btn-primary" data-i18n="checkout.back_to_shop">Back to Shop</a>
+    </div>
+
+    <div class="checkout-wrap" id="checkoutForm">
+      <div>
+        <h3 data-i18n="checkout.contact_details">Delivery Details</h3>
+        <form id="orderForm">
+          <div class="form-group">
+            <label data-i18n="checkout.name">Full Name</label>
+            <input type="text" id="custName" required>
+          </div>
+          <div class="form-group">
+            <label data-i18n="checkout.phone">Phone Number (WhatsApp preferred)</label>
+            <input type="tel" id="custPhone" required pattern="[0-9+ ]{8,15}">
+          </div>
+          <div class="form-group">
+            <label data-i18n="checkout.address">Full Address</label>
+            <textarea id="custAddress" rows="3" required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="checkout.city">City / Town</label>
+              <input type="text" id="custCity" required>
+            </div>
+            <div class="form-group">
+              <label data-i18n="checkout.state">State</label>
+              <input type="text" id="custState" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label data-i18n="checkout.pincode">Pincode</label>
+            <input type="text" id="custPincode" required pattern="[0-9]{6}" maxlength="6">
+          </div>
+          <div class="form-group">
+            <label data-i18n="checkout.payment">Payment Method</label>
+            <input type="text" value="Cash on Delivery (COD)" data-i18n="checkout.cod" disabled>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" data-i18n="checkout.place_order">Place Order on WhatsApp</button>
+          <p class="note" data-i18n="checkout.note">After placing your order, WhatsApp will open with your details pre-filled — just hit send to confirm with us.</p>
+        </form>
+      </div>
+
+      <div>
+        <div class="summary-card">
+          <h3 data-i18n="checkout.order_summary">Order Summary</h3>
+          <div id="checkoutItems"></div>
+          <div class="summary-row" style="margin-top:14px;"><span data-i18n="cart.subtotal">Subtotal</span><span id="checkoutSubtotal">₹0</span></div>
+          <div class="summary-row"><span data-i18n="cart.delivery">Delivery</span><span data-i18n="cart.free">FREE</span></div>
+          <div class="summary-row total"><span data-i18n="cart.total">Total</span><span id="checkoutTotal">₹0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cart Drawer -->
+<div class="overlay" id="cartOverlay"></div>
+<div class="drawer" id="cartDrawer">
+  <div class="drawer-head">
+    <h3 data-i18n="cart.title">Your Cart</h3>
+    <button class="drawer-close" id="cartDrawerClose">&times;</button>
+  </div>
+  <div class="drawer-body" id="cartDrawerBody"></div>
+  <div class="drawer-foot" id="cartDrawerFoot"></div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+function renderCheckoutSummary(){
+  const cart = getCart();
+  const wrap = document.getElementById("checkoutForm");
+  const empty = document.getElementById("emptyCartNotice");
+  if(cart.length === 0){
+    wrap.style.display = "none";
+    empty.style.display = "block";
+    return;
+  }
+  wrap.style.display = "grid";
+  empty.style.display = "none";
+  const itemsEl = document.getElementById("checkoutItems");
+  itemsEl.innerHTML = cart.map(item=>{
+    const p = getProductById(item.id);
+    if(!p) return "";
+    return `<div class="cart-item">
+      <img src="${p.image}" alt="">
+      <div class="cart-item-info">
+        <h4>${t(p.nameKey)}</h4>
+        <div>₹${p.price} x ${item.qty}</div>
+      </div>
+    </div>`;
+  }).join("");
+  const total = cartTotal();
+  document.getElementById("checkoutSubtotal").textContent = "₹" + total;
+  document.getElementById("checkoutTotal").textContent = "₹" + total;
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderCheckoutSummary();
+
+  document.getElementById("orderForm").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const cart = getCart();
+    if(cart.length === 0) return;
+    const order = {
+      orderId: generateOrderId(),
+      items: cart,
+      total: cartTotal(),
+      name: document.getElementById("custName").value.trim(),
+      phone: document.getElementById("custPhone").value.trim(),
+      address: document.getElementById("custAddress").value.trim(),
+      city: document.getElementById("custCity").value.trim(),
+      state: document.getElementById("custState").value.trim(),
+      pincode: document.getElementById("custPincode").value.trim()
+    };
+    saveOrderRecord(order);
+    const message = buildOrderMessage(order);
+    window.open(whatsappLink(message), "_blank");
+  });
+});
+</script>
+</body>
+</html>
