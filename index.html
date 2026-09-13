@@ -61,6 +61,76 @@
   </div>
 </section>
 
+<section id="motion">
+  <div class="motion-sticky">
+    <div class="container motion-inner">
+      <div class="motion-text">
+        <span class="eyebrow" style="color:#8fd6b4;" data-i18n="motion.eyebrow">The Prayer, Step by Step</span>
+        <h2 data-i18n="motion.title">Every posture, without the pain</h2>
+        <div class="motion-captions">
+          <div class="motion-caption">
+            <h3 data-i18n="motion.s1_title">Standing in prayer</h3>
+            <p data-i18n="motion.s1_text">Qiyam — where every rak'ah begins.</p>
+          </div>
+          <div class="motion-caption">
+            <h3 data-i18n="motion.s2_title">Bowing down</h3>
+            <p data-i18n="motion.s2_text">Ruku — the knees start to take the strain.</p>
+          </div>
+          <div class="motion-caption">
+            <h3 data-i18n="motion.s3_title">In sujood</h3>
+            <p data-i18n="motion.s3_text">The hardest part for aching knees and backs.</p>
+          </div>
+          <div class="motion-caption">
+            <h3 data-i18n="motion.s4_title">Rising up</h3>
+            <p data-i18n="motion.s4_text">Getting back up is where most people struggle.</p>
+          </div>
+          <div class="motion-caption">
+            <h3 data-i18n="motion.s5_title">Resting on Palmar</h3>
+            <p data-i18n="motion.s5_text">Tashahhud in comfort — the stool takes the weight, not your knees.</p>
+          </div>
+        </div>
+        <div class="motion-dots">
+          <span class="motion-dot active"></span><span class="motion-dot"></span><span class="motion-dot"></span><span class="motion-dot"></span><span class="motion-dot"></span>
+        </div>
+        <div class="scroll-hint" data-i18n="motion.hint">Scroll to see how it works</div>
+      </div>
+
+      <div class="motion-stage">
+        <svg viewBox="255 45 500 425" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Animated figure moving through prayer postures and sitting on the Palmar stool">
+          <!-- comfort halo when seated (sits behind everything) -->
+          <circle id="mComfort" cx="398" cy="372" r="86" fill="none" stroke="#8fd6b4" stroke-width="2" opacity="0"/>
+
+          <!-- prayer mat -->
+          <rect x="265" y="432" width="440" height="16" rx="8" fill="#2f6b52" opacity=".55"/>
+          <rect x="265" y="446" width="440" height="6" rx="3" fill="#d8b978" opacity=".35"/>
+
+          <!-- knee strain indicator -->
+          <circle id="mPain" cx="0" cy="0" r="17" fill="#e0644f" opacity="0"/>
+
+          <!-- figure -->
+          <g stroke="#f7efe0" stroke-linecap="round" fill="none">
+            <line id="mShin"    stroke-width="20"/>
+            <line id="mFoot"    stroke-width="14"/>
+            <line id="mThigh"   stroke-width="22"/>
+            <line id="mTorso"   stroke-width="30"/>
+            <line id="mUpArm"   stroke-width="16"/>
+            <line id="mForeArm" stroke-width="14"/>
+          </g>
+          <circle id="mHead" cx="400" cy="90" r="27" fill="#f7efe0"/>
+          <circle id="mCap"  cx="400" cy="70" r="19" fill="#ffffff" opacity=".95"/>
+
+          <!-- Palmar stool: drawn last so its near side reads in front of the figure -->
+          <g id="mStool" opacity=".25" transform="translate(-185 0)">
+            <rect x="360" y="350" width="72" height="18" rx="9" fill="#2f6b52"/>
+            <path d="M426 375 H 382 C 352 375 352 405 382 405" fill="none" stroke="#0e1c26" stroke-width="9" stroke-linecap="round"/>
+            <path d="M382 405 H 426 C 456 405 456 430 426 430 H 374" fill="none" stroke="#0e1c26" stroke-width="9" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="problem">
   <div class="container problem-inner">
     <div>
@@ -260,6 +330,7 @@
 <script src="js/products.js"></script>
 <script src="js/main.js"></script>
 <script src="js/chatbot.js"></script>
+<script src="js/motion.js"></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
