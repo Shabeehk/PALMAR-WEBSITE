@@ -184,7 +184,7 @@ function buildOrderMessage(order){
    Paste the Apps Script Web App URL below and every order is appended to the
    sheet automatically. Leave it empty and orders still arrive on WhatsApp.
    Setup steps: see admin.html → "Send orders to a Google Sheet".            */
-const SHEET_ENDPOINT = "";
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbz73kSV_v7MGwKrV0ZGeXN-UUgNp47QsX0kdOZJ_MLnANdyxY06e64ru6unwOshQx8j/exec";
 
 function sendOrderToSheet(order){
   if(!SHEET_ENDPOINT) return;
