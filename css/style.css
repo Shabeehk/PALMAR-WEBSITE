@@ -130,6 +130,12 @@ nav.main-nav a:hover{color:var(--green);}
 .shop-card-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap;}
 .shop-price{font-size:1.5rem;font-weight:800;color:var(--navy);}
 
+/* Pincode lookup status */
+.pin-status{font-size:.83rem;font-weight:600;margin-top:6px;min-height:18px;}
+.pin-status.checking{color:var(--muted);}
+.pin-status.ok{color:var(--green);}
+.pin-status.bad{color:#b5433a;}
+
 /* Payment options */
 .pay-options{display:flex;flex-direction:column;gap:10px;}
 .pay-options label.pay-option{

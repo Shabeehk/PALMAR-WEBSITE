@@ -145,27 +145,73 @@ function closeCartDrawer(){
   document.getElementById("cartDrawer").classList.remove("show");
 }
 
-/* ---------- WhatsApp order message builder ---------- */
+/* ---------- Order record helpers ---------- */
+function orderItemsText(order){
+  return order.items.map(item=>{
+    const p = getProductById(item.id);
+    return p ? `${p.name || productName(p)} x${item.qty}` : "";
+  }).filter(Boolean).join(", ");
+}
+function paymentLabel(order){
+  return order.payment === "upi"
+    ? `PREPAID (UPI) - PAID, please verify`
+    : `COD - collect ${CURRENCY_SYMBOL}${order.total} on delivery`;
+}
+
+/* WhatsApp message, laid out to match the order sheet */
 function buildOrderMessage(order){
   const lines = [];
-  lines.push(`Assalamu Alaikum, I'd like to place a Palmar order.`);
+  lines.push(`PALMAR ORDER - ${order.orderId}`);
   lines.push(``);
-  lines.push(`Order ID: ${order.orderId}`);
-  order.items.forEach(item=>{
-    const p = getProductById(item.id);
-    if(p) lines.push(`- ${p.name || productName(p)} x${item.qty} — ${CURRENCY_SYMBOL}${p.price*item.qty}`);
-  });
-  if(order.payment === "upi"){
-    lines.push(`Discount (UPI): -${CURRENCY_SYMBOL}${UPI_DISCOUNT}`);
-    lines.push(`Total paid: ${CURRENCY_SYMBOL}${order.total} — PAID BY UPI ✅ (please verify)`);
-  } else {
-    lines.push(`Total: ${CURRENCY_SYMBOL}${order.total} (Cash on Delivery)`);
-  }
+  lines.push(`DATE       : ${order.date || new Date().toLocaleDateString("en-GB")}`);
+  lines.push(`Name       : ${order.name}`);
+  lines.push(`Address    : ${order.address}`);
+  lines.push(`Post       : ${order.post || ""}`);
+  lines.push(`Pin code   : ${order.pincode}`);
+  lines.push(`Taluk      : ${order.taluk || ""}`);
+  lines.push(`District   : ${order.district || ""}`);
+  lines.push(`State      : ${order.state || ""}`);
+  lines.push(`Phone      : ${order.phone}`);
   lines.push(``);
-  lines.push(`Name: ${order.name}`);
-  lines.push(`Phone: ${order.phone}`);
-  lines.push(`Address: ${order.address}, ${order.city}, ${order.state} - ${order.pincode}`);
+  lines.push(`Item(s)    : ${orderItemsText(order)}`);
+  if(order.payment === "upi") lines.push(`Discount   : -${CURRENCY_SYMBOL}${UPI_DISCOUNT} (UPI)`);
+  lines.push(`Amount     : ${CURRENCY_SYMBOL}${order.total}`);
+  lines.push(`Payment    : ${paymentLabel(order)}`);
   return lines.join("\n");
+}
+
+/* ---------- Google Sheet (optional) ----------
+   Paste the Apps Script Web App URL below and every order is appended to the
+   sheet automatically. Leave it empty and orders still arrive on WhatsApp.
+   Setup steps: see admin.html → "Send orders to a Google Sheet".            */
+const SHEET_ENDPOINT = "";
+
+function sendOrderToSheet(order){
+  if(!SHEET_ENDPOINT) return;
+  const row = {
+    orderId: order.orderId,
+    date: order.date || new Date().toLocaleDateString("en-GB"),
+    name: order.name,
+    address: order.address,
+    post: order.post || "",
+    pincode: order.pincode,
+    taluk: order.taluk || "",
+    district: order.district || "",
+    state: order.state || "",
+    phone: order.phone,
+    items: orderItemsText(order),
+    amount: order.total,
+    payment: order.payment === "upi" ? "PREPAID (UPI)" : "COD",
+    paidMark: order.payment === "upi" ? "PAID - to verify" : "NOT PAID"
+  };
+  try{
+    fetch(SHEET_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(row)
+    });
+  }catch(e){ /* never block the order on this */ }
 }
 function whatsappLink(message){
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;

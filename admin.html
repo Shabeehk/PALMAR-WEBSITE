@@ -88,6 +88,20 @@
           </div>
         </div>
 
+        <div class="admin-card" style="margin-top:22px;">
+          <h3>Send orders to a Google Sheet</h3>
+          <p class="note">Every order already arrives on WhatsApp. Do this once and each order is also written into a Google Sheet automatically, with the columns: DATE, Order ID, Name, Address, Post, Pin code, Taluk, District, State, Phone, Item(s), Amount, Payment, Paid mark.</p>
+          <div class="steps" style="margin-top:12px;">
+            <ol>
+              <li>Create a new Google Sheet (sheets.new) and name it <b>Palmar Orders</b>.</li>
+              <li>In that sheet: <b>Extensions → Apps Script</b>.</li>
+              <li>Delete whatever is there and paste the contents of <code>google-sheet/apps-script.gs</code> from the website folder. Save.</li>
+              <li><b>Deploy → New deployment → Web app</b>. Set <i>Execute as: Me</i> and <i>Who has access: Anyone</i>. Deploy and authorise.</li>
+              <li>Copy the <b>Web app URL</b> it gives you and send it to me — I'll put it live. (Or edit <code>js/main.js</code> yourself: paste it into <code>SHEET_ENDPOINT</code>.)</li>
+            </ol>
+          </div>
+        </div>
+
         <div class="steps" style="margin-top:22px;">
           <b>To publish your changes:</b>
           <ol>

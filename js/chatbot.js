@@ -125,14 +125,18 @@ function showOrderReview(){
   const orderId = generateOrderId();
   const order = {
     orderId,
+    date: new Date().toLocaleDateString("en-GB"),
     items: [{ id: product.id, qty: 1 }],
     total: product.price,
+    payment: "cod",
     name: chatState.data.name,
     phone: chatState.data.phone,
     address: chatState.data.address,
-    city: "",
-    state: "",
-    pincode: ""
+    post: "",
+    pincode: "",
+    taluk: "",
+    district: "",
+    state: ""
   };
   saveOrderRecord(order);
   chatBotSay(t("chatbot.order_review"));

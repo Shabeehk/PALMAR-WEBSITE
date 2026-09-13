@@ -7,8 +7,8 @@ const PRODUCTS = [
     name: "Palmar Sujood Stool",       // fallback name
     price: 970,
     currency: "INR",
-    image: "assets/hero-lifestyle.jpg",
-    images: ["assets/hero-lifestyle.jpg", "assets/sizes-features.jpg", "assets/how-it-works.jpg"],
+    image: "assets/stool-product.jpg",
+    images: ["assets/stool-product.jpg", "assets/stool-closeup.jpg"],
     descKey: "product.tagline",
     desc: "Pain-Free Tashahhud, Made Simple",
     sku: "PALMAR-001"

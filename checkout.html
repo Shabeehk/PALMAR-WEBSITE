@@ -54,21 +54,30 @@
           </div>
           <div class="form-group">
             <label data-i18n="checkout.address">Full Address</label>
-            <textarea id="custAddress" rows="3" required></textarea>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label data-i18n="checkout.city">City / Town</label>
-              <input type="text" id="custCity" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="checkout.state">State</label>
-              <input type="text" id="custState" required>
-            </div>
+            <textarea id="custAddress" rows="2" required placeholder="House name / number, street"></textarea>
           </div>
           <div class="form-group">
             <label data-i18n="checkout.pincode">Pincode</label>
-            <input type="text" id="custPincode" required pattern="[0-9]{6}" maxlength="6">
+            <input type="text" id="custPincode" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="postal-code">
+            <div id="pinStatus" class="pin-status"></div>
+          </div>
+          <div class="form-group" id="postWrap">
+            <label data-i18n="checkout.post">Post Office</label>
+            <select id="custPost" required><option value="" data-i18n="checkout.post_placeholder">Enter pincode first</option></select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="checkout.taluk">Taluk</label>
+              <input type="text" id="custTaluk" required>
+            </div>
+            <div class="form-group">
+              <label data-i18n="checkout.district">District</label>
+              <input type="text" id="custDistrict" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label data-i18n="checkout.state">State</label>
+            <input type="text" id="custState" required>
           </div>
           <div class="form-group">
             <label data-i18n="checkout.payment">Payment Method</label>
@@ -204,8 +213,69 @@ function renderCheckoutSummary(){
   });
 }
 
+/* ---------- Pincode validation + auto-fill (India Post API) ---------- */
+let pinCache = {};
+let pinValid = false;
+
+function setPinStatus(state, msg){
+  const el = document.getElementById("pinStatus");
+  el.className = "pin-status " + state;   // "", "checking", "ok", "bad"
+  el.textContent = msg || "";
+}
+
+async function lookupPincode(pin){
+  if(pinCache[pin]) return pinCache[pin];
+  const res = await fetch("https://api.postalpincode.in/pincode/" + pin);
+  const data = await res.json();
+  const entry = Array.isArray(data) ? data[0] : null;
+  if(!entry || entry.Status !== "Success" || !entry.PostOffice || !entry.PostOffice.length) return null;
+  pinCache[pin] = entry.PostOffice;
+  return entry.PostOffice;
+}
+
+function applyPincodeData(offices){
+  const postSel = document.getElementById("custPost");
+  postSel.innerHTML = offices.map(o=>`<option value="${o.Name}">${o.Name}</option>`).join("");
+  const first = offices[0];
+  document.getElementById("custTaluk").value = first.Block || first.Division || "";
+  document.getElementById("custDistrict").value = first.District || "";
+  document.getElementById("custState").value = first.State || "";
+  setPinStatus("ok", "✓ " + first.District + ", " + first.State +
+    (offices.length > 1 ? " — " + offices.length + " " + t("checkout.pin_offices") : ""));
+}
+
+async function handlePincodeInput(){
+  const input = document.getElementById("custPincode");
+  const pin = input.value.replace(/\D/g, "").slice(0,6);
+  input.value = pin;
+  pinValid = false;
+  if(pin.length < 6){
+    setPinStatus("", "");
+    return;
+  }
+  setPinStatus("checking", t("checkout.pin_checking"));
+  try{
+    const offices = await lookupPincode(pin);
+    if(!offices){ setPinStatus("bad", t("checkout.pin_bad")); return; }
+    applyPincodeData(offices);
+    pinValid = true;
+  }catch(err){
+    // offline or API down — let the customer type the details manually
+    setPinStatus("bad", t("checkout.pin_manual"));
+    pinValid = true;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", ()=>{
   renderCheckoutSummary();
+
+  const pinInput = document.getElementById("custPincode");
+  let pinTimer;
+  pinInput.addEventListener("input", ()=>{
+    clearTimeout(pinTimer);
+    pinTimer = setTimeout(handlePincodeInput, 350);
+  });
+  pinInput.addEventListener("blur", handlePincodeInput);
 
   document.querySelectorAll('input[name="payment"]').forEach(r=>{
     r.addEventListener("change", renderCheckoutSummary);
@@ -218,17 +288,21 @@ document.addEventListener("DOMContentLoaded", ()=>{
     const payment = selectedPayment();
     const order = {
       orderId: generateOrderId(),
+      date: new Date().toLocaleDateString("en-GB"),   // DD/MM/YYYY
       items: cart,
       total: payableTotal(),
       payment: payment,
       name: document.getElementById("custName").value.trim(),
       phone: document.getElementById("custPhone").value.trim(),
       address: document.getElementById("custAddress").value.trim(),
-      city: document.getElementById("custCity").value.trim(),
-      state: document.getElementById("custState").value.trim(),
-      pincode: document.getElementById("custPincode").value.trim()
+      post: document.getElementById("custPost").value.trim(),
+      pincode: document.getElementById("custPincode").value.trim(),
+      taluk: document.getElementById("custTaluk").value.trim(),
+      district: document.getElementById("custDistrict").value.trim(),
+      state: document.getElementById("custState").value.trim()
     };
     saveOrderRecord(order);
+    sendOrderToSheet(order);
     const message = buildOrderMessage(order);
 
     if(payment === "upi"){
