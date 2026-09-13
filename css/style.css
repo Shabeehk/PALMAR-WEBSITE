@@ -103,8 +103,9 @@ nav.main-nav a:hover{color:var(--green);}
 .motion-text h2{color:#fff;margin-bottom:26px;}
 .motion-captions{position:relative;min-height:130px;}
 .motion-caption{
-  position:absolute;inset:0;transition:opacity .25s ease, transform .25s ease;
+  position:absolute;inset:0;opacity:0;transition:opacity .25s ease, transform .25s ease;
 }
+.motion-caption:first-child{opacity:1;}
 .motion-caption h3{color:#8fd6b4;font-size:1.35rem;margin-bottom:6px;}
 .motion-caption p{color:#dbe3e8;font-size:1.02rem;max-width:420px;}
 .motion-dots{display:flex;gap:10px;margin-top:8px;}

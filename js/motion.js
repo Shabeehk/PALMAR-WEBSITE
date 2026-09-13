@@ -156,9 +156,13 @@
 
   function updateCaptions(index){
     const caps = document.querySelectorAll(".motion-caption");
+    const nearest = Math.round(index);
     caps.forEach((el, i) => {
       const dist = Math.abs(index - i);
-      const op = Math.max(0, 1 - dist * 2.2);
+      // the nearest caption always stays readable; the others fade out quickly
+      const op = i === nearest
+        ? 1 - Math.min(dist, 0.5) * 0.7
+        : Math.max(0, 1 - dist * 2.6);
       el.style.opacity = op.toFixed(2);
       el.style.transform = `translateY(${((1-op) * 14).toFixed(1)}px)`;
       el.setAttribute("aria-hidden", op < 0.5 ? "true" : "false");
