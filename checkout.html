@@ -72,10 +72,45 @@
           </div>
           <div class="form-group">
             <label data-i18n="checkout.payment">Payment Method</label>
-            <input type="text" value="Cash on Delivery (COD)" data-i18n="checkout.cod" disabled>
+            <div class="pay-options">
+              <label class="pay-option selected" id="payOptCod">
+                <input type="radio" name="payment" value="cod" checked>
+                <span class="pay-option-body">
+                  <b data-i18n="checkout.cod">Cash on Delivery (COD)</b>
+                  <small data-i18n="checkout.cod_note">Pay in cash when the order arrives.</small>
+                </span>
+              </label>
+              <label class="pay-option" id="payOptUpi">
+                <input type="radio" name="payment" value="upi">
+                <span class="pay-option-body">
+                  <b data-i18n="checkout.upi">Pay now by UPI / QR</b>
+                  <small data-i18n="checkout.upi_note">Scan the QR with any UPI app — ₹20 off your order.</small>
+                </span>
+                <span class="pay-badge" data-i18n="checkout.save20">Save ₹20</span>
+              </label>
+            </div>
           </div>
-          <button type="submit" class="btn btn-primary btn-lg btn-block" data-i18n="checkout.place_order">Place Order on WhatsApp</button>
-          <p class="note" data-i18n="checkout.note">After placing your order, WhatsApp will open with your details pre-filled — just hit send to confirm with us.</p>
+
+          <div id="upiPanel" class="upi-panel" hidden>
+            <h4 data-i18n="checkout.upi_scan">Scan to pay</h4>
+            <img src="assets/upi-qr.png" alt="UPI QR code for AHAMMED SHABEEH" class="upi-qr">
+            <div class="upi-meta">
+              <div><span data-i18n="checkout.upi_amount">Amount to pay</span>: <b id="upiAmount">₹0</b></div>
+              <div data-i18n="checkout.upi_id_label">UPI ID: kappuramshabeeh@oksbi</div>
+            </div>
+            <a id="upiAppBtn" class="btn btn-outline btn-block" href="#" data-i18n="checkout.upi_open_app">Open UPI app to pay</a>
+            <p class="note" data-i18n="checkout.upi_after">After paying, fill in your details above and tap the button below. We'll verify the payment and confirm your order.</p>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="placeOrderBtn" data-i18n="checkout.place_order">Place Order on WhatsApp</button>
+          <p class="note" id="checkoutNote" data-i18n="checkout.note">After placing your order, WhatsApp will open with your details pre-filled — just hit send to confirm with us.</p>
+
+          <div id="orderPending" class="order-pending" hidden>
+            <h3 data-i18n="checkout.pending_title">Payment received — order pending verification</h3>
+            <p data-i18n="checkout.pending_text">Thank you! Your order will be placed once we verify the payment. Please wait — we'll confirm on WhatsApp shortly.</p>
+            <p class="note"><span data-i18n="checkout.pending_id">Order ID</span>: <b id="pendingOrderId"></b></p>
+            <a id="pendingWaBtn" class="btn btn-primary btn-block" href="#" target="_blank" data-i18n="checkout.pending_notify">Send payment details on WhatsApp</a>
+          </div>
         </form>
       </div>
 
@@ -84,6 +119,7 @@
           <h3 data-i18n="checkout.order_summary">Order Summary</h3>
           <div id="checkoutItems"></div>
           <div class="summary-row" style="margin-top:14px;"><span data-i18n="cart.subtotal">Subtotal</span><span id="checkoutSubtotal">₹0</span></div>
+          <div class="summary-row" id="discountRow" hidden><span data-i18n="checkout.upi_discount">UPI discount</span><span id="checkoutDiscount">−₹20</span></div>
           <div class="summary-row"><span data-i18n="cart.delivery">Delivery</span><span data-i18n="cart.free">FREE</span></div>
           <div class="summary-row total"><span data-i18n="cart.total">Total</span><span id="checkoutTotal">₹0</span></div>
         </div>
@@ -107,6 +143,15 @@
 <script src="js/products.js"></script>
 <script src="js/main.js"></script>
 <script>
+function selectedPayment(){
+  const el = document.querySelector('input[name="payment"]:checked');
+  return el ? el.value : "cod";
+}
+function payableTotal(){
+  const base = cartTotal();
+  return selectedPayment() === "upi" ? Math.max(0, base - UPI_DISCOUNT) : base;
+}
+
 function renderCheckoutSummary(){
   const cart = getCart();
   const wrap = document.getElementById("checkoutForm");
@@ -125,27 +170,57 @@ function renderCheckoutSummary(){
     return `<div class="cart-item">
       <img src="${p.image}" alt="">
       <div class="cart-item-info">
-        <h4>${t(p.nameKey)}</h4>
+        <h4>${productName(p)}</h4>
         <div>₹${p.price} x ${item.qty}</div>
       </div>
     </div>`;
   }).join("");
-  const total = cartTotal();
-  document.getElementById("checkoutSubtotal").textContent = "₹" + total;
-  document.getElementById("checkoutTotal").textContent = "₹" + total;
+
+  const subtotal = cartTotal();
+  const isUpi = selectedPayment() === "upi";
+  document.getElementById("checkoutSubtotal").textContent = "₹" + subtotal;
+  const discRow = document.getElementById("discountRow");
+  if(discRow){
+    discRow.hidden = !isUpi;
+    document.getElementById("checkoutDiscount").textContent = "−₹" + UPI_DISCOUNT;
+  }
+  document.getElementById("checkoutTotal").textContent = "₹" + payableTotal();
+
+  // UPI panel
+  const panel = document.getElementById("upiPanel");
+  panel.hidden = !isUpi;
+  if(isUpi){
+    document.getElementById("upiAmount").textContent = "₹" + payableTotal();
+    document.getElementById("upiAppBtn").href = upiPayLink(payableTotal(), "Palmar order");
+  }
+  document.getElementById("placeOrderBtn").textContent =
+    isUpi ? t("checkout.place_order_upi") : t("checkout.place_order");
+  document.getElementById("checkoutNote").textContent =
+    isUpi ? t("checkout.note_upi") : t("checkout.note");
+
+  document.querySelectorAll(".pay-option").forEach(el=>{
+    const input = el.querySelector('input[name="payment"]');
+    el.classList.toggle("selected", input.checked);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", ()=>{
   renderCheckoutSummary();
 
+  document.querySelectorAll('input[name="payment"]').forEach(r=>{
+    r.addEventListener("change", renderCheckoutSummary);
+  });
+
   document.getElementById("orderForm").addEventListener("submit", (e)=>{
     e.preventDefault();
     const cart = getCart();
     if(cart.length === 0) return;
+    const payment = selectedPayment();
     const order = {
       orderId: generateOrderId(),
       items: cart,
-      total: cartTotal(),
+      total: payableTotal(),
+      payment: payment,
       name: document.getElementById("custName").value.trim(),
       phone: document.getElementById("custPhone").value.trim(),
       address: document.getElementById("custAddress").value.trim(),
@@ -155,7 +230,17 @@ document.addEventListener("DOMContentLoaded", ()=>{
     };
     saveOrderRecord(order);
     const message = buildOrderMessage(order);
-    window.open(whatsappLink(message), "_blank");
+
+    if(payment === "upi"){
+      // show the "wait for verification" state, and notify the shop on WhatsApp
+      document.getElementById("pendingOrderId").textContent = order.orderId;
+      document.getElementById("pendingWaBtn").href = whatsappLink(message);
+      document.getElementById("orderPending").hidden = false;
+      document.getElementById("orderPending").scrollIntoView({behavior:"smooth", block:"center"});
+      window.open(whatsappLink(message), "_blank");
+    } else {
+      window.open(whatsappLink(message), "_blank");
+    }
   });
 });
 </script>

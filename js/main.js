@@ -3,6 +3,18 @@ const WHATSAPP_NUMBER = "971561282052"; // international format, no +, no spaces
 const CURRENCY_SYMBOL = "₹";
 const FREE_DELIVERY_THRESHOLD = 0; // delivery is always free currently
 
+// UPI / QR payment
+const UPI_ID = "kappuramshabeeh@oksbi";
+const UPI_PAYEE = "AHAMMED SHABEEH";
+const UPI_DISCOUNT = 20;   // ₹ off when paying by UPI instead of cash on delivery
+
+function upiPayLink(amount, note){
+  return "upi://pay?pa=" + encodeURIComponent(UPI_ID) +
+         "&pn=" + encodeURIComponent(UPI_PAYEE) +
+         "&am=" + encodeURIComponent(amount) +
+         "&cu=INR&tn=" + encodeURIComponent(note || "Palmar order");
+}
+
 /* ---------- Language ---------- */
 function getLang(){
   return localStorage.getItem("palmar_lang") || "en";
@@ -32,6 +44,7 @@ function applyTranslations(lang){
   });
   document.title = t("site.title", lang);
   renderCartDrawer();
+  if(typeof renderShop === "function") renderShop();
   if(typeof renderChatOptions === "function") renderChatOptions();
 }
 
@@ -98,7 +111,7 @@ function renderCartDrawer(){
       <div class="cart-item">
         <img src="${p.image}" alt="">
         <div class="cart-item-info">
-          <h4>${t(p.nameKey)}</h4>
+          <h4>${productName(p)}</h4>
           <div>${CURRENCY_SYMBOL}${p.price} x ${item.qty}</div>
           <div class="cart-item-actions">
             <div class="qty-control">
@@ -140,9 +153,14 @@ function buildOrderMessage(order){
   lines.push(`Order ID: ${order.orderId}`);
   order.items.forEach(item=>{
     const p = getProductById(item.id);
-    if(p) lines.push(`- ${t(p.nameKey,"en")} x${item.qty} — ${CURRENCY_SYMBOL}${p.price*item.qty}`);
+    if(p) lines.push(`- ${p.name || productName(p)} x${item.qty} — ${CURRENCY_SYMBOL}${p.price*item.qty}`);
   });
-  lines.push(`Total: ${CURRENCY_SYMBOL}${order.total} (Cash on Delivery)`);
+  if(order.payment === "upi"){
+    lines.push(`Discount (UPI): -${CURRENCY_SYMBOL}${UPI_DISCOUNT}`);
+    lines.push(`Total paid: ${CURRENCY_SYMBOL}${order.total} — PAID BY UPI ✅ (please verify)`);
+  } else {
+    lines.push(`Total: ${CURRENCY_SYMBOL}${order.total} (Cash on Delivery)`);
+  }
   lines.push(``);
   lines.push(`Name: ${order.name}`);
   lines.push(`Phone: ${order.phone}`);
@@ -164,6 +182,25 @@ function saveOrderRecord(order){
     orders.push(order);
     localStorage.setItem("palmar_orders", JSON.stringify(orders));
   }catch(e){}
+}
+
+/* ---------- Shop grid (all products) ---------- */
+function renderShop(){
+  const wrap = document.getElementById("shopGrid");
+  if(!wrap) return;
+  wrap.innerHTML = PRODUCTS.map(p=>`
+    <div class="shop-card">
+      <div class="shop-card-img"><img src="${p.image}" alt="${productName(p)}"></div>
+      <div class="shop-card-body">
+        <h3>${productName(p)}</h3>
+        <p>${productDesc(p)}</p>
+        <div class="shop-card-foot">
+          <span class="shop-price">${CURRENCY_SYMBOL}${p.price}</span>
+          <button class="btn btn-primary" onclick="addToCart('${p.id}',1)">${t("product.add_to_cart")}</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
 }
 
 /* ---------- FAQ accordion ---------- */
