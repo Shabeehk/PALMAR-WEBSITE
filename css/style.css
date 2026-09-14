@@ -162,6 +162,39 @@ nav.main-nav a:hover{color:var(--green);}
 .upi-panel h4{margin:0 0 12px;color:var(--navy);}
 .upi-qr{width:220px;max-width:70%;margin:0 auto 14px;border-radius:12px;background:#fff;}
 .upi-meta{font-size:.9rem;color:var(--navy);margin-bottom:14px;line-height:1.7;}
+.upi-apps{margin:16px 0 6px;}
+.upi-apps-label{font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:10px;}
+.upi-apps-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.upi-app{
+  display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 10px;background:#fff;
+  border:1px solid rgba(23,50,71,.2);border-radius:12px;font-weight:700;font-size:.88rem;
+  color:var(--navy);text-decoration:none;
+}
+.upi-app:active{background:var(--beige);}
+.upi-app-dot{width:10px;height:10px;border-radius:50%;flex:none;}
+.upi-app-dot.gpay{background:#4285f4;}
+.upi-app-dot.phonepe{background:#5f259f;}
+.upi-app-dot.paytm{background:#00baf2;}
+.upi-app-dot.any{background:var(--green);}
+
+/* Order placed page */
+.placed-head{text-align:center;margin-bottom:28px;}
+.placed-tick{
+  width:64px;height:64px;border-radius:50%;background:var(--green);color:#fff;font-size:2rem;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-weight:800;
+}
+.placed-head h1{margin-bottom:8px;}
+.placed-id{
+  display:inline-block;background:var(--beige);padding:8px 18px;border-radius:999px;
+  font-size:.9rem;color:var(--navy-dark);margin-top:6px;
+}
+.placed-card{margin-bottom:22px;}
+.placed-table{width:100%;border-collapse:collapse;font-size:.92rem;}
+.placed-table td{padding:9px 0;border-bottom:1px solid #f0f0f0;vertical-align:top;}
+.placed-table td:first-child{color:var(--muted);width:38%;}
+.placed-table td:last-child{color:var(--navy);font-weight:600;}
+.placed-actions{display:flex;flex-direction:column;gap:10px;}
+
 .order-pending{
   margin-top:18px;padding:22px;border-radius:14px;background:#eaf5ef;border:1px solid rgba(47,107,82,.35);
 }

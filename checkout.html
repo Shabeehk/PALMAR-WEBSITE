@@ -107,7 +107,16 @@
               <div><span data-i18n="checkout.upi_amount">Amount to pay</span>: <b id="upiAmount">₹0</b></div>
               <div data-i18n="checkout.upi_id_label">UPI ID: kappuramshabeeh@oksbi</div>
             </div>
-            <a id="upiAppBtn" class="btn btn-outline btn-block" href="#" data-i18n="checkout.upi_open_app">Open UPI app to pay</a>
+            <div id="upiApps" class="upi-apps" hidden>
+              <div class="upi-apps-label" data-i18n="checkout.upi_pay_with">Or pay in one tap</div>
+              <div class="upi-apps-row">
+                <a class="upi-app" data-upi-app="gpay" href="#"><span class="upi-app-dot gpay"></span>Google Pay</a>
+                <a class="upi-app" data-upi-app="phonepe" href="#"><span class="upi-app-dot phonepe"></span>PhonePe</a>
+                <a class="upi-app" data-upi-app="paytm" href="#"><span class="upi-app-dot paytm"></span>Paytm</a>
+                <a class="upi-app" data-upi-app="any" href="#"><span class="upi-app-dot any"></span><span data-i18n="checkout.upi_any_app">Any UPI app</span></a>
+              </div>
+            </div>
+            <p class="note" id="upiDesktopHint" data-i18n="checkout.upi_desktop_hint">On a computer, scan the QR with your phone.</p>
             <p class="note" data-i18n="checkout.upi_after">After paying, fill in your details above and tap the button below. We'll verify the payment and confirm your order.</p>
           </div>
 
@@ -200,7 +209,13 @@ function renderCheckoutSummary(){
   panel.hidden = !isUpi;
   if(isUpi){
     document.getElementById("upiAmount").textContent = "₹" + payableTotal();
-    document.getElementById("upiAppBtn").href = upiPayLink(payableTotal(), "Palmar order");
+    const amount = payableTotal();
+    const onPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    document.getElementById("upiApps").hidden = !onPhone;
+    document.getElementById("upiDesktopHint").hidden = onPhone;
+    document.querySelectorAll("[data-upi-app]").forEach(a=>{
+      a.href = upiPayLink(amount, "Palmar order", a.getAttribute("data-upi-app"));
+    });
   }
   document.getElementById("placeOrderBtn").textContent =
     isUpi ? t("checkout.place_order_upi") : t("checkout.place_order");
@@ -303,18 +318,17 @@ document.addEventListener("DOMContentLoaded", ()=>{
     };
     saveOrderRecord(order);
     sendOrderToSheet(order);
-    const message = buildOrderMessage(order);
+    try{ localStorage.setItem("palmar_last_order", JSON.stringify(order)); }catch(e){}
 
-    if(payment === "upi"){
-      // show the "wait for verification" state, and notify the shop on WhatsApp
-      document.getElementById("pendingOrderId").textContent = order.orderId;
-      document.getElementById("pendingWaBtn").href = whatsappLink(message);
-      document.getElementById("orderPending").hidden = false;
-      document.getElementById("orderPending").scrollIntoView({behavior:"smooth", block:"center"});
-      window.open(whatsappLink(message), "_blank");
-    } else {
-      window.open(whatsappLink(message), "_blank");
-    }
+    const message = buildOrderMessage(order);
+    // hand the order to WhatsApp, empty the cart, then show the confirmation page
+    window.open(whatsappLink(message), "_blank");
+    try{ localStorage.removeItem("palmar_cart"); }catch(e){}
+
+    const btn = document.getElementById("placeOrderBtn");
+    btn.disabled = true;
+    btn.textContent = t("checkout.placing");
+    setTimeout(()=>{ window.location.href = "order-placed.html"; }, 600);
   });
 });
 </script>

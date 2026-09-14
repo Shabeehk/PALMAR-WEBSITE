@@ -8,11 +8,18 @@ const UPI_ID = "kappuramshabeeh@oksbi";
 const UPI_PAYEE = "AHAMMED SHABEEH";
 const UPI_DISCOUNT = 20;   // ₹ off when paying by UPI instead of cash on delivery
 
-function upiPayLink(amount, note){
-  return "upi://pay?pa=" + encodeURIComponent(UPI_ID) +
-         "&pn=" + encodeURIComponent(UPI_PAYEE) +
-         "&am=" + encodeURIComponent(amount) +
-         "&cu=INR&tn=" + encodeURIComponent(note || "Palmar order");
+// app: "gpay" | "phonepe" | "paytm" | anything else = any UPI app
+function upiPayLink(amount, note, app){
+  const query = "pa=" + encodeURIComponent(UPI_ID) +
+                "&pn=" + encodeURIComponent(UPI_PAYEE) +
+                "&am=" + encodeURIComponent(amount) +
+                "&cu=INR&tn=" + encodeURIComponent(note || "Palmar order");
+  switch(app){
+    case "gpay":    return "tez://upi/pay?" + query;
+    case "phonepe": return "phonepe://pay?" + query;
+    case "paytm":   return "paytmmp://pay?" + query;
+    default:        return "upi://pay?" + query;
+  }
 }
 
 /* ---------- Language ---------- */
@@ -210,7 +217,7 @@ function sendOrderToSheet(order){
       mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(row)
-    });
+    }).catch(()=>{});   // sheet logging must never break the order
   }catch(e){ /* never block the order on this */ }
 }
 function whatsappLink(message){
